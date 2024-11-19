@@ -58,10 +58,9 @@ class provider implements \core_privacy\local\metadata\null_provider, paygw_prov
 
         $subcontext[] = get_string('gatewayname', 'paygw_mpay24');
         $record = $DB->get_record('paygw_mpay24', ['paymentid' => $payment->id]);
-        $orderid = $record->pp_orderid ?? $record->pu_orderid ?? 0;
 
         $data = (object) [
-            'orderid' => $orderid,
+            'orderid' => $record->mpay24_orderid ?? 0,
         ];
         writer::with_context($context)->export_data(
             $subcontext,
