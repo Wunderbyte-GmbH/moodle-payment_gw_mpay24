@@ -220,6 +220,31 @@ class transaction_complete extends external_api implements interface_transaction
                     $event->trigger();
                     throw new \moodle_exception('nonmatchingtidandidentifier', 'paygw_mpay24');
                 } else {
+                    if ($userid != $checkorder->userid) {
+                        $userid = $USER->id;
+                         // We need a hard stop. If for any reason we can't find out the userid, we log it and stop.
+                        // We trigger the payment_error event.
+                        $context = context_system::instance();
+                        $event = payment_error::create([
+                            'context' => $context,
+                            'userid' => $userid,
+                            'other' => [
+                                    'message' => 'wronguseridintransactioncomplete',
+                                    'orderid' => $tid,
+                                    'itemid' => $itemid,
+                                    'component' => $component,
+                                    'paymentarea' => $paymentarea]]);
+                        $event->trigger();
+
+                        $url = str_replace('success=1', 'success=0', $successurl);
+
+                        return [
+                            'url' => $successurl ?? $serverurl,
+                            'success' => false,
+                            'message' => get_string('wronguseridintransactioncomplete', 'paygw_qenta'),
+                        ];
+                    }
+
                     try {
                         $paymentid = payment_helper::save_payment(
                         $payable->get_account_id(),
