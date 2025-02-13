@@ -203,15 +203,23 @@ class transaction_complete extends external_api implements interface_transaction
 
                 // Check if order is existing.
 
-                $checkorder = $DB->get_record('paygw_mpay24_openorders', ['tid' => $tid]);
+                $checkorder = $DB->get_record('paygw_mpay24_openorders', array('tid' => $tid, 'itemid' => $itemid));
 
-                if (!empty($existingdata) || empty($checkorder) ) {
-                    // Purchase already stored.
-                    $success = false;
-                    $message = get_string('internalerror', 'paygw_mpay24');
-
+                if (empty($checkorder)) {
+                    // There is a paymenterror.
+                    $context = context_system::instance();
+                    $event = payment_error::create([
+                        'context' => $context,
+                        'userid' => $userid,
+                        'other' => [
+                                'message' => 'nonmatchingtidandidentifier',
+                                'orderid' => $tid,
+                                'itemid' => $itemid,
+                                'component' => $component,
+                                'paymentarea' => $paymentarea]]);
+                    $event->trigger();
+                    throw new \moodle_exception('nonmatchingtidandidentifier', 'paygw_mpay24');
                 } else {
-
                     try {
                         $paymentid = payment_helper::save_payment(
                         $payable->get_account_id(),
