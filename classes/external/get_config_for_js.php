@@ -110,7 +110,7 @@ class get_config_for_js extends external_api {
         $record->timemodified = time();
 
         // Check for duplicate.
-        if (!$existingrecord = $DB->get_record('paygw_mpay24_openorders', ['itemid' => $itemid, 'userid' => $USER->id])) {
+        if (!$existingrecord = $DB->get_record('paygw_mpay24_openorders', ['itemid' => $itemid, 'userid' => $USER->id, 'tid' => $record->tid])) {
             $id = $DB->insert_record('paygw_mpay24_openorders', $record);
 
             // We trigger the payment_added event.
@@ -127,6 +127,20 @@ class get_config_for_js extends external_api {
         } else {
             // If we already have an entry with the exact same itemid and userid, we actually will use the same merchant id.
             // This will prevent a successful payment and we thus avoid duplicate entries in DB.
+
+            // There is one case where price could have changed (because of changes in credit application eg.
+            if ($amount != $existingrecord->price) {
+                // We need to update the open Orders table accordingly.
+                $DB->update_record(
+                    'paygw_qenta_openorders',
+                    [
+                        'id' => $existingrecord->id,
+                        'price' => $amount,
+                        'timemodified' => time(),
+                    ]
+                );
+            }
+
             $merchanttransactionid = $existingrecord->tid;
         }
 
