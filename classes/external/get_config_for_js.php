@@ -132,7 +132,7 @@ class get_config_for_js extends external_api {
             if ($amount != $existingrecord->price) {
                 // We need to update the open Orders table accordingly.
                 $DB->update_record(
-                    'paygw_qenta_openorders',
+                    'paygw_mpay24_openorders',
                     [
                         'id' => $existingrecord->id,
                         'price' => $amount,

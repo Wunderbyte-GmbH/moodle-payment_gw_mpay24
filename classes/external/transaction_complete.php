@@ -241,7 +241,7 @@ class transaction_complete extends external_api implements interface_transaction
                         return [
                             'url' => $successurl ?? $serverurl,
                             'success' => false,
-                            'message' => get_string('wronguseridintransactioncomplete', 'paygw_qenta'),
+                            'message' => get_string('wronguseridintransactioncomplete', 'paygw_mpay24'),
                         ];
                     }
 
